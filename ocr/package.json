@@ -1,0 +1,20 @@
+{
+  "name": "fifa-ocr-service",
+  "version": "1.0.0",
+  "description": "OCR Service for FIFA/EA FC Match Screen Photos",
+  "main": "index.js",
+  "type": "module",
+  "scripts": {
+    "start": "node index.js",
+    "test": "node example.js"
+  },
+  "keywords": ["ocr", "fifa", "tesseract", "image-processing"],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "tesseract.js": "^5.0.4",
+    "axios": "^1.6.2",
+    "sharp": "^0.33.1"
+  }
+}
+

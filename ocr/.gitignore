@@ -1,0 +1,9 @@
+node_modules/
+*.log
+temp/
+tmp/
+*.png
+*.jpg
+*.jpeg
+.env
+

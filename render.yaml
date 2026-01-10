@@ -1,0 +1,23 @@
+services:
+  - type: web
+    name: fifa-match-tracker-api
+    env: node
+    buildCommand: npm install
+    startCommand: node server.js
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: PORT
+        value: 3000
+      - key: DB_SSL
+        value: true
+      # NOT: Aşağıdaki değerleri Render.com dashboard'dan manuel ekle:
+      # - DB_HOST
+      # - DB_USER
+      # - DB_PASSWORD
+      # - DB_NAME
+      # - JWT_SECRET
+      # - CLOUDINARY_CLOUD_NAME (opsiyonel)
+      # - CLOUDINARY_API_KEY (opsiyonel)
+      # - CLOUDINARY_API_SECRET (opsiyonel)
+
