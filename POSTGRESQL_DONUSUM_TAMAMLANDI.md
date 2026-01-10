@@ -100,6 +100,7 @@ NODE_ENV=production
 PORT=3000
 
 # PlanetScale PostgreSQL
+# ÖNEMLİ: Gerçek bilgileri Render.com Dashboard'da manuel ekle! (Güvenlik için burada yok)
 DB_HOST=us-east-4.pg.psdb.cloud
 DB_USER=pscale_api_XXXXX
 DB_PASSWORD=pscale_pw_XXXXX
