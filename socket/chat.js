@@ -76,19 +76,22 @@ const setupSocketIO = (io) => {
           return;
         }
 
-        // Mesajı veritabanına kaydet
+        // Mesajı veritabanına kaydet (PostgreSQL: RETURNING clause ile id al)
         const [result] = await pool.execute(
-          'INSERT INTO chat_messages (sender_id, receiver_id, message) VALUES (?, ?, ?)',
+          'INSERT INTO chat_messages (sender_id, receiver_id, message) VALUES (?, ?, ?) RETURNING id, created_at',
           [userId, receiverId, message.trim()]
         );
 
+        const messageId = result.insertId || result[0]?.id;
+        const createdAt = result[0]?.created_at || new Date();
+
         const messageData = {
-          id: result.insertId,
+          id: messageId,
           senderId: userId,
           senderUsername: username,
           receiverId,
           message: message.trim(),
-          createdAt: new Date()
+          createdAt: createdAt
         };
 
         // Alıcıya mesaj gönder (eğer online ise)
@@ -99,7 +102,7 @@ const setupSocketIO = (io) => {
 
         // Gönderene onay gönder
         socket.emit('message_sent', {
-          messageId: result.insertId,
+          messageId: messageId,
           ...messageData
         });
       } catch (error) {

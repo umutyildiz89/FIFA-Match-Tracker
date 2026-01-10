@@ -162,7 +162,7 @@ const rejectFriendRequest = async (req, res) => {
       [requestId, userId, 'pending']
     );
 
-    if (result.affectedRows === 0) {
+    if ((result.affectedRows || 0) === 0) {
       return res.status(404).json({
         success: false,
         message: 'Arkadaşlık isteği bulunamadı'
@@ -235,7 +235,7 @@ const removeFriend = async (req, res) => {
       [userId, friendId, friendId, userId]
     );
 
-    if (result.affectedRows === 0) {
+    if ((result.affectedRows || 0) === 0) {
       return res.status(404).json({
         success: false,
         message: 'Arkadaşlık bulunamadı'

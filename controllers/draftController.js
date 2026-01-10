@@ -24,14 +24,14 @@ const createDraftFromOCR = async (req, res) => {
 
     const timestamp = new Date();
 
-    // Draft'ı oluştur
+    // Draft'ı oluştur (PostgreSQL: RETURNING clause ile id al)
     const [result] = await pool.execute(
       `INSERT INTO drafts (mode, team1_name, team2_name, score1, score2, players, image_url, uploader_id, timestamp, status)
-       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, 'pending')`,
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, 'pending') RETURNING id`,
       [mode, team1_name, team2_name, score1, score2, JSON.stringify(players), imageUrl || null, uploaderId, timestamp]
     );
 
-    const draftId = result.insertId;
+    const draftId = result.insertId || result[0]?.id;
 
     // Oluşturulan draft'ı getir
     const [drafts] = await pool.execute(
@@ -47,6 +47,10 @@ const createDraftFromOCR = async (req, res) => {
     }
 
     const newDraft = drafts[0];
+    // PostgreSQL JSONB zaten object olabilir
+    if (typeof newDraft.players === 'string') {
+      newDraft.players = JSON.parse(newDraft.players);
+    }
 
     // Merge kontrolü yap
     await checkAndMergeDrafts(newDraft);
@@ -58,7 +62,10 @@ const createDraftFromOCR = async (req, res) => {
     );
 
     const finalDraft = updatedDrafts[0];
-    finalDraft.players = JSON.parse(finalDraft.players);
+    // PostgreSQL JSONB zaten object olabilir, parse etmeye çalış
+    if (typeof finalDraft.players === 'string') {
+      finalDraft.players = JSON.parse(finalDraft.players);
+    }
 
     res.status(201).json({
       success: true,
@@ -90,7 +97,10 @@ const checkAndMergeDrafts = async (newDraft) => {
     );
 
     for (const existingDraft of existingDrafts) {
-      existingDraft.players = JSON.parse(existingDraft.players);
+      // PostgreSQL JSONB zaten object olabilir
+      if (typeof existingDraft.players === 'string') {
+        existingDraft.players = JSON.parse(existingDraft.players);
+      }
       
       if (canMergeDrafts(newDraft, existingDraft)) {
         // Merge işlemi
@@ -150,10 +160,10 @@ const getAllDrafts = async (req, res) => {
 
     const [drafts] = await pool.execute(query, params);
 
-    // Players JSON'ı parse et
+    // Players JSONB parse et (PostgreSQL'de zaten object olabilir)
     const parsedDrafts = drafts.map(draft => ({
       ...draft,
-      players: JSON.parse(draft.players)
+      players: typeof draft.players === 'string' ? JSON.parse(draft.players) : draft.players
     }));
 
     res.json({
@@ -187,7 +197,10 @@ const getDraftById = async (req, res) => {
     }
 
     const draft = drafts[0];
-    draft.players = JSON.parse(draft.players);
+    // PostgreSQL JSONB zaten object olabilir
+    if (typeof draft.players === 'string') {
+      draft.players = JSON.parse(draft.players);
+    }
 
     res.json({
       success: true,
@@ -223,23 +236,25 @@ const approveDraft = async (req, res) => {
 
     const draft = drafts[0];
 
-    // Match oluştur
+    // Match oluştur (PostgreSQL: RETURNING clause ile id al)
     const [matchResult] = await pool.execute(
       `INSERT INTO matches (mode, team1_name, team2_name, score1, score2, players, image_url, uploader_id, draft_id, match_date)
-       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?) RETURNING id`,
       [
         draft.mode,
         draft.team1_name,
         draft.team2_name,
         draft.score1,
         draft.score2,
-        draft.players,
+        typeof draft.players === 'string' ? draft.players : JSON.stringify(draft.players),
         draft.image_url,
         draft.uploader_id,
         draft.id,
         draft.timestamp
       ]
     );
+
+    const matchId = matchResult.insertId || matchResult[0]?.id;
 
     // Draft'ı approved olarak işaretle
     await pool.execute(
@@ -250,11 +265,14 @@ const approveDraft = async (req, res) => {
     // Match'i getir
     const [matches] = await pool.execute(
       'SELECT * FROM matches WHERE id = ?',
-      [matchResult.insertId]
+      [matchId]
     );
 
     const match = matches[0];
-    match.players = JSON.parse(match.players);
+    // PostgreSQL JSONB zaten object olabilir
+    if (typeof match.players === 'string') {
+      match.players = JSON.parse(match.players);
+    }
 
     res.json({
       success: true,
@@ -280,7 +298,7 @@ const rejectDraft = async (req, res) => {
       ['rejected', id, 'pending']
     );
 
-    if (result.affectedRows === 0) {
+    if ((result.affectedRows || 0) === 0) {
       return res.status(404).json({
         success: false,
         message: 'Reddedilebilir draft bulunamadı'

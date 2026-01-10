@@ -31,10 +31,10 @@ const getAllMatches = async (req, res) => {
 
     const [matches] = await pool.execute(query, params);
 
-    // Players JSON'ı parse et
+    // Players JSONB parse et (PostgreSQL'de zaten object olabilir)
     const parsedMatches = matches.map(match => ({
       ...match,
-      players: JSON.parse(match.players)
+      players: typeof match.players === 'string' ? JSON.parse(match.players) : match.players
     }));
 
     res.json({
@@ -68,7 +68,10 @@ const getMatchById = async (req, res) => {
     }
 
     const match = matches[0];
-    match.players = JSON.parse(match.players);
+    // PostgreSQL JSONB zaten object olabilir
+    if (typeof match.players === 'string') {
+      match.players = JSON.parse(match.players);
+    }
 
     res.json({
       success: true,
@@ -93,9 +96,10 @@ const getMyMatches = async (req, res) => {
       [userId]
     );
 
+    // PostgreSQL JSONB zaten object olabilir
     const parsedMatches = matches.map(match => ({
       ...match,
-      players: JSON.parse(match.players)
+      players: typeof match.players === 'string' ? JSON.parse(match.players) : match.players
     }));
 
     res.json({

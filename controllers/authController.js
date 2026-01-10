@@ -49,12 +49,14 @@ const register = async (req, res) => {
     // Şifreyi hashle ve kullanıcıyı oluştur
     const passwordHash = await hashPassword(password);
     
+    // PostgreSQL: RETURNING clause ile id'yi al
     const [result] = await pool.execute(
-      'INSERT INTO users (email, username, password_hash) VALUES (?, ?, ?)',
+      'INSERT INTO users (email, username, password_hash) VALUES (?, ?, ?) RETURNING id',
       [email, username, passwordHash]
     );
 
-    const token = generateToken({ userId: result.insertId, email, username });
+    const userId = result.insertId || result[0]?.id;
+    const token = generateToken({ userId, email, username });
 
     res.status(201).json({
       success: true,
@@ -62,7 +64,7 @@ const register = async (req, res) => {
       data: {
         token,
         user: {
-          id: result.insertId,
+          id: userId,
           email,
           username
         }
