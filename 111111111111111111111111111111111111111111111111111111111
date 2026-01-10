@@ -1,0 +1,3 @@
+[33m4f79c5a[m[33m ([m[1;36mHEAD[m[33m -> [m[1;32mmain[m[33m)[m Security: Remove all PlanetScale credentials from files - Use Render.com env vars instead
+[33me012e27[m Security: Remove PlanetScale credentials from repository
+[33mb2638fb[m PostgreSQL dönüşümü tamamlandı - Schema, config, controllers güncellendi
