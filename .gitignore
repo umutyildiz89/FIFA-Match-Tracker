@@ -40,6 +40,11 @@ Thumbs.db
 
 # PlanetScale credentials (güvenlik için)
 planetscale*.txt
+planetscale*.md
 render*.txt
+render*.md
+RENDER_ENV_HAZIR.md
+PLANETSCALE_BILGILER_PARSING.md
 *.credentials
+*_FINAL.txt
 
