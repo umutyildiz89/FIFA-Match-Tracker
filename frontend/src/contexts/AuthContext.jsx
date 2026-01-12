@@ -139,7 +139,9 @@ export const AuthProvider = ({ children }) => {
   const login = async (emailOrUsername, password) => {
     try {
       const response = await authService.login(emailOrUsername, password)
-      const { token: newToken, user: userData } = response.data
+      // Backend response format: { success: true, data: { token, user } }
+      // Axios response.data = backend response
+      const { token: newToken, user: userData } = response.data.data
 
       setToken(newToken)
       setUser(userData)
@@ -155,7 +157,9 @@ export const AuthProvider = ({ children }) => {
   const register = async (email, username, password) => {
     try {
       const response = await authService.register(email, username, password)
-      const { token: newToken, user: userData } = response.data
+      // Backend response format: { success: true, data: { token, user } }
+      // Axios response.data = backend response
+      const { token: newToken, user: userData } = response.data.data
 
       setToken(newToken)
       setUser(userData)
