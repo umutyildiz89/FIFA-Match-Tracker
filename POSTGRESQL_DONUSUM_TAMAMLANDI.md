@@ -100,15 +100,12 @@ NODE_ENV=production
 PORT=3000
 
 # PlanetScale PostgreSQL
-# ÖNEMLİ: Gerçek bilgileri Render.com Dashboard'da manuel ekle! (Güvenlik için burada yok)
 DB_HOST=us-east-4.pg.psdb.cloud
-DB_USER=pscale_api_XXXXX
-DB_PASSWORD=pscale_pw_XXXXX
-DB_NAME=XXXXX
+DB_USER=pscale_api_8s4elrt6ngqf
+DB_PASSWORD=WecCDGCozxsJoXNnyUq65hrEYvyC7wJy
+DB_NAME=ahs1ru2oomn6
 DB_PORT=5432  # PostgreSQL port (default)
 DB_SSL=true
-
-# NOT: Gerçek bilgileri Render.com Dashboard'da manuel ekle! (Güvenlik için burada yok)
 
 # JWT Secret
 JWT_SECRET=ef7a9eb831581df58f608b82d5d42d704b7d38fffc04a08c39090bb43e0e4c4d
