@@ -19,9 +19,10 @@ const Layout = ({ children }) => {
     <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column' }}>
       <nav style={{
         backgroundColor: '#fff',
-        borderBottom: '1px solid var(--border-color)',
+        borderBottom: '2px solid #00A8E8',
         padding: '1rem 0',
-        boxShadow: 'var(--shadow)'
+        boxShadow: '0 2px 8px rgba(0, 168, 232, 0.1)',
+        background: 'linear-gradient(to bottom, #ffffff 0%, #f8fafc 100%)'
       }}>
         <div className="container" style={{
           display: 'flex',
@@ -31,10 +32,20 @@ const Layout = ({ children }) => {
           <Link to="/" style={{
             fontSize: '1.25rem',
             fontWeight: 'bold',
-            color: 'var(--primary-color)',
-            textDecoration: 'none'
+            textDecoration: 'none',
+            display: 'flex',
+            alignItems: 'center',
+            gap: '0.5rem',
+            background: 'linear-gradient(135deg, #00A8E8 0%, #0056B3 100%)',
+            WebkitBackgroundClip: 'text',
+            WebkitTextFillColor: 'transparent',
+            backgroundClip: 'text'
           }}>
-            ⚽ FIFA Match Tracker
+            <span style={{
+              fontSize: '1.5rem',
+              filter: 'drop-shadow(0 2px 4px rgba(0, 168, 232, 0.3))'
+            }}>⚽</span>
+            <span>FIFA Match Tracker</span>
           </Link>
           
           <div style={{ display: 'flex', gap: '1rem', alignItems: 'center', flexWrap: 'wrap' }}>

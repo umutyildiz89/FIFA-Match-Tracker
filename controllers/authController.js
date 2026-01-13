@@ -181,9 +181,86 @@ const getProfile = async (req, res) => {
   }
 };
 
+// Kullanıcı arama (username ile)
+const searchUsers = async (req, res) => {
+  try {
+    const { query } = req.query;
+    const currentUserId = req.user?.id; // Authenticated user ID (optional)
+
+    if (!query || query.trim().length < 2) {
+      return res.status(400).json({
+        success: false,
+        message: 'Arama sorgusu en az 2 karakter olmalıdır'
+      });
+    }
+
+    const searchTerm = `%${query.trim()}%`;
+
+    // Kullanıcıları ara (username veya email ile)
+    const [users] = await pool.execute(
+      `SELECT id, username, email, created_at 
+       FROM users 
+       WHERE username ILIKE ? OR email ILIKE ?
+       ORDER BY username ASC
+       LIMIT 20`,
+      [searchTerm, searchTerm]
+    );
+
+    // Eğer authenticated user varsa, mevcut arkadaşlık durumunu kontrol et
+    let usersWithStatus = users;
+    if (currentUserId) {
+      const userIds = users.map(u => u.id).filter(id => id !== currentUserId);
+      
+      if (userIds.length > 0) {
+        const placeholders = userIds.map(() => '?').join(',');
+        const [friendships] = await pool.execute(
+          `SELECT 
+            CASE 
+              WHEN user_id = ? THEN friend_id
+              ELSE user_id
+            END as friend_id,
+            status
+           FROM friends 
+           WHERE (user_id = ? OR friend_id = ?) 
+           AND (user_id IN (${placeholders}) OR friend_id IN (${placeholders}))
+           AND status IN ('accepted', 'pending')`,
+          [currentUserId, currentUserId, currentUserId, ...userIds, ...userIds]
+        );
+
+        const friendshipMap = {};
+        friendships.forEach(f => {
+          friendshipMap[f.friend_id] = f.status;
+        });
+
+        usersWithStatus = users.map(user => ({
+          ...user,
+          friendshipStatus: user.id === currentUserId ? 'self' : (friendshipMap[user.id] || null)
+        }));
+      } else {
+        usersWithStatus = users.map(user => ({
+          ...user,
+          friendshipStatus: user.id === currentUserId ? 'self' : null
+        }));
+      }
+    }
+
+    res.json({
+      success: true,
+      data: usersWithStatus
+    });
+  } catch (error) {
+    console.error('Search users error:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Sunucu hatası'
+    });
+  }
+};
+
 module.exports = {
   register,
   login,
-  getProfile
+  getProfile,
+  searchUsers
 };
 

@@ -64,6 +64,10 @@ export const authService = {
 
   getProfile: () => {
     return api.get('/api/auth/profile').then(res => res.data.data)
+  },
+
+  searchUsers: (query) => {
+    return api.get('/api/auth/search', { params: { query } }).then(res => res.data.data)
   }
 }
 
@@ -96,10 +100,6 @@ export const draftsService = {
     return api.get(`/api/drafts/${id}`).then(res => res.data.data)
   },
 
-  processImage: (imageUrl) => {
-    return api.post('/api/drafts/process-image', { imageUrl }).then(res => res.data.data)
-  },
-
   createFromOCR: (data) => {
     return api.post('/api/drafts/ocr', data).then(res => res.data.data)
   },
@@ -115,8 +115,9 @@ export const draftsService = {
 
 // Friends API
 export const friendsService = {
-  sendRequest: (friendId) => {
-    return api.post('/api/friends/request', { friendId }).then(res => res.data)
+  sendRequest: (friendId, username) => {
+    const payload = friendId ? { friendId } : { username }
+    return api.post('/api/friends/request', payload).then(res => res.data)
   },
 
   getPending: () => {

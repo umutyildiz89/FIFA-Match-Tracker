@@ -1,19 +1,38 @@
 const pool = require('../config/database');
 
-// Arkadaş ekleme isteği gönder
+// Arkadaş ekleme isteği gönder (ID veya username ile)
 const sendFriendRequest = async (req, res) => {
   try {
     const userId = req.user.id;
-    const { friendId } = req.body;
+    const { friendId, username } = req.body;
 
-    if (!friendId) {
+    if (!friendId && !username) {
       return res.status(400).json({
         success: false,
-        message: 'Arkadaş ID gereklidir'
+        message: 'Arkadaş ID veya kullanıcı adı gereklidir'
       });
     }
 
-    if (userId === friendId) {
+    let targetUserId = friendId;
+
+    // Eğer username verilmişse, önce ID'yi bul
+    if (username && !friendId) {
+      const [users] = await pool.execute(
+        'SELECT id FROM users WHERE username = ?',
+        [username]
+      );
+
+      if (users.length === 0) {
+        return res.status(404).json({
+          success: false,
+          message: 'Kullanıcı bulunamadı'
+        });
+      }
+
+      targetUserId = users[0].id;
+    }
+
+    if (userId === targetUserId) {
       return res.status(400).json({
         success: false,
         message: 'Kendinize arkadaş isteği gönderemezsiniz'
@@ -23,7 +42,7 @@ const sendFriendRequest = async (req, res) => {
     // Kullanıcının var olup olmadığını kontrol et
     const [users] = await pool.execute(
       'SELECT id, username FROM users WHERE id = ?',
-      [friendId]
+      [targetUserId]
     );
 
     if (users.length === 0) {
@@ -37,7 +56,7 @@ const sendFriendRequest = async (req, res) => {
     const [existing] = await pool.execute(
       `SELECT * FROM friends 
        WHERE (user_id = ? AND friend_id = ?) OR (user_id = ? AND friend_id = ?)`,
-      [userId, friendId, friendId, userId]
+      [userId, targetUserId, targetUserId, userId]
     );
 
     if (existing.length > 0) {
@@ -68,7 +87,7 @@ const sendFriendRequest = async (req, res) => {
     // Yeni arkadaşlık isteği oluştur
     await pool.execute(
       'INSERT INTO friends (user_id, friend_id, status) VALUES (?, ?, ?)',
-      [userId, friendId, 'pending']
+      [userId, targetUserId, 'pending']
     );
 
     res.json({

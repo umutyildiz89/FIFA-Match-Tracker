@@ -1,56 +1,5 @@
 const pool = require('../config/database');
 const { canMergeDrafts, mergeDrafts } = require('../utils/draftMerge');
-const { processMatchImage } = require('../services/ocr');
-
-// Görsel URL'inden OCR yapıp draft oluştur
-const processImageWithOCR = async (req, res) => {
-  try {
-    const { imageUrl } = req.body;
-    const uploaderId = req.user.id;
-
-    // Validasyon
-    if (!imageUrl) {
-      return res.status(400).json({
-        success: false,
-        message: 'Görsel URL gereklidir'
-      });
-    }
-
-    console.log('OCR işlemi başlatılıyor...', imageUrl);
-
-    // OCR işlemi yap
-    const ocrResult = await processMatchImage(imageUrl);
-
-    if (!ocrResult.success || !ocrResult.matchData) {
-      return res.status(500).json({
-        success: false,
-        message: 'OCR işlemi başarısız oldu: ' + (ocrResult.errors?.join(', ') || 'Bilinmeyen hata')
-      });
-    }
-
-    const matchData = ocrResult.matchData;
-
-    // OCR sonucu ile draft oluştur
-    req.body = {
-      mode: matchData.mode,
-      team1_name: matchData.team1_name,
-      team2_name: matchData.team2_name,
-      score1: matchData.score1,
-      score2: matchData.score2,
-      players: matchData.players,
-      imageUrl: imageUrl
-    };
-
-    // createDraftFromOCR fonksiyonunu çağır
-    return await createDraftFromOCR(req, res);
-  } catch (error) {
-    console.error('Process image with OCR error:', error);
-    res.status(500).json({
-      success: false,
-      message: 'OCR işlemi sırasında hata oluştu: ' + error.message
-    });
-  }
-};
 
 // OCR sonucu geldiğinde draft oluştur
 const createDraftFromOCR = async (req, res) => {
@@ -370,7 +319,6 @@ const rejectDraft = async (req, res) => {
 };
 
 module.exports = {
-  processImageWithOCR,
   createDraftFromOCR,
   getAllDrafts,
   getDraftById,
