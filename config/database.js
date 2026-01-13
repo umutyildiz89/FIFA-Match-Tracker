@@ -1,10 +1,32 @@
-// PostgreSQL Database bağlantısı - PlanetScale PostgreSQL için
+// PostgreSQL Database bağlantısı - Railway ve PlanetScale PostgreSQL için
 const { Pool } = require('pg');
 
 // Database bağlantısı opsiyonel - eğer environment variables yoksa mock pool döndür
 let pool;
 
-if (process.env.DB_HOST && process.env.DB_USER && process.env.DB_NAME) {
+// Railway DATABASE_URL desteği (öncelikli)
+if (process.env.DATABASE_URL) {
+  pool = new Pool({
+    connectionString: process.env.DATABASE_URL,
+    ssl: process.env.DATABASE_URL.includes('railway') ? {
+      rejectUnauthorized: false
+    } : undefined,
+    max: 10,
+    idleTimeoutMillis: 30000,
+    connectionTimeoutMillis: 2000,
+  });
+
+  // Test connection (async, hata verse bile devam eder)
+  pool.query('SELECT NOW()')
+    .then(() => {
+      console.log('✅ PostgreSQL Database connected successfully (DATABASE_URL)');
+    })
+    .catch(err => {
+      console.warn('⚠️  Database connection failed:', err.message);
+      console.warn('⚠️  API endpoints will not work without database');
+      console.warn('⚠️  Check DATABASE_URL environment variable');
+    });
+} else if (process.env.DB_HOST && process.env.DB_USER && process.env.DB_NAME) {
   pool = new Pool({
     host: process.env.DB_HOST,
     user: process.env.DB_USER,
@@ -30,9 +52,9 @@ if (process.env.DB_HOST && process.env.DB_USER && process.env.DB_NAME) {
       console.warn('⚠️  To enable database, configure DB_* environment variables in .env file');
     });
 } else {
-  console.warn('⚠️  Database not configured (DB_HOST, DB_USER, DB_NAME not set)');
+  console.warn('⚠️  Database not configured (DATABASE_URL or DB_HOST, DB_USER, DB_NAME not set)');
   console.warn('⚠️  API endpoints will not work without database');
-  console.warn('⚠️  To enable database, add DB_* variables to .env file');
+  console.warn('⚠️  To enable database, add DATABASE_URL or DB_* variables to .env file');
   
   // Mock pool - hata verir ama crash etmez
   pool = {
