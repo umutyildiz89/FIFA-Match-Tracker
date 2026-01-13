@@ -12,12 +12,14 @@ const ProtectedRoute = ({ children }) => {
     import.meta.env.VITE_DEV_MODE === 'true' ||
     (typeof window !== 'undefined' && (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'))
 
-  // DEBUG: Development mode kontrolü
-  console.log('🔍 ProtectedRoute isDevMode kontrolü:', {
-    MODE: import.meta.env.MODE,
-    VITE_DEV_MODE: import.meta.env.VITE_DEV_MODE,
-    isDevMode: isDevMode
-  })
+  // DEBUG: Development mode kontrolü (sadece dev mode'da)
+  if (isDevMode) {
+    console.log('🔍 ProtectedRoute isDevMode kontrolü:', {
+      MODE: import.meta.env.MODE,
+      VITE_DEV_MODE: import.meta.env.VITE_DEV_MODE,
+      isDevMode: isDevMode
+    })
+  }
 
   // Mock token ve user kontrolü (localStorage ve state'ten) - her render'da kontrol et
   // localStorage'dan direkt kontrol et çünkü state update bekleme

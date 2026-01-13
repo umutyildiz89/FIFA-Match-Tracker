@@ -78,15 +78,17 @@ export const AuthProvider = ({ children }) => {
   }
 
   useEffect(() => {
-    // DEBUG: Development mode kontrolü
-    console.log('🔧 AuthContext useEffect:', {
-      isDevMode,
-      savedToken,
-      initialToken,
-      shouldUseMock,
-      currentToken: token,
-      currentUser: user
-    })
+    // DEBUG: Development mode kontrolü (sadece dev mode'da)
+    if (isDevMode) {
+      console.log('🔧 AuthContext useEffect:', {
+        isDevMode,
+        savedToken,
+        initialToken,
+        shouldUseMock,
+        currentToken: token,
+        currentUser: user
+      })
+    }
 
     // İlk render: Development mode kontrolü (sadece bir kere çalışır)
     if (isDevMode) {
@@ -139,7 +141,9 @@ export const AuthProvider = ({ children }) => {
   const login = async (emailOrUsername, password) => {
     try {
       const response = await authService.login(emailOrUsername, password)
-      const { token: newToken, user: userData } = response.data
+      // Backend response format: { success: true, data: { token, user } }
+      // Axios response.data = backend response
+      const { token: newToken, user: userData } = response.data.data
 
       setToken(newToken)
       setUser(userData)
@@ -155,7 +159,9 @@ export const AuthProvider = ({ children }) => {
   const register = async (email, username, password) => {
     try {
       const response = await authService.register(email, username, password)
-      const { token: newToken, user: userData } = response.data
+      // Backend response format: { success: true, data: { token, user } }
+      // Axios response.data = backend response
+      const { token: newToken, user: userData } = response.data.data
 
       setToken(newToken)
       setUser(userData)
