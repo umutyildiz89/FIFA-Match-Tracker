@@ -96,6 +96,10 @@ export const draftsService = {
     return api.get(`/api/drafts/${id}`).then(res => res.data.data)
   },
 
+  processImage: (imageUrl) => {
+    return api.post('/api/drafts/process-image', { imageUrl }).then(res => res.data.data)
+  },
+
   createFromOCR: (data) => {
     return api.post('/api/drafts/ocr', data).then(res => res.data.data)
   },

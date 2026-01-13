@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { draftsService } from '../services/api'
+import { useAuth } from '../contexts/AuthContext'
 
 const ImageUpload = ({ onUploadSuccess, onUploadError }) => {
   const [selectedFile, setSelectedFile] = useState(null)
@@ -77,17 +78,16 @@ const ImageUpload = ({ onUploadSuccess, onUploadError }) => {
       const imageUrl = await uploadToCloudinary(selectedFile)
       console.log('Image uploaded to Cloudinary:', imageUrl)
 
-      // 2. Backend OCR endpoint'ine gönder (OCR servis backend'de çalışacak)
-      // Şimdilik direkt backend'e draft olarak gönder
-      // Gerçek kullanımda: OCR servis backend'de otomatik çalışır
-      
-      // Note: Backend'de OCR entegrasyonu yapılacak, şimdilik manual draft oluştur
-      // Bu kısım daha sonra güncellenecek - OCR servis backend'e entegre edildiğinde
+      // 2. Backend OCR endpoint'ine gönder
+      console.log('OCR işlemi başlatılıyor...')
+      const draft = await draftsService.processImage(imageUrl)
+      console.log('OCR tamamlandı, draft oluşturuldu:', draft)
 
       if (onUploadSuccess) {
         onUploadSuccess({
           imageUrl,
-          message: 'Resim başarıyla yüklendi. OCR işlemi başlatıldı.'
+          draft,
+          message: 'Resim başarıyla yüklendi ve OCR işlemi tamamlandı.'
         })
       }
 

@@ -2,6 +2,7 @@ const express = require('express');
 const router = express.Router();
 const { authenticate } = require('../middleware/auth');
 const {
+  processImageWithOCR,
   createDraftFromOCR,
   getAllDrafts,
   getDraftById,
@@ -12,6 +13,7 @@ const {
 // Tüm route'lar authentication gerektirir
 router.use(authenticate);
 
+router.post('/process-image', processImageWithOCR);
 router.post('/ocr', createDraftFromOCR);
 router.get('/', getAllDrafts);
 router.get('/:id', getDraftById);
