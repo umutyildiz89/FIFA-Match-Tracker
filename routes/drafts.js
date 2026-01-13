@@ -6,13 +6,15 @@ const {
   getAllDrafts,
   getDraftById,
   approveDraft,
-  rejectDraft
+  rejectDraft,
+  processImageWithOCR
 } = require('../controllers/draftController');
 
 // Tüm route'lar authentication gerektirir
 router.use(authenticate);
 
 router.post('/ocr', createDraftFromOCR);
+router.post('/process-image', processImageWithOCR);
 router.get('/', getAllDrafts);
 router.get('/:id', getDraftById);
 router.post('/:id/approve', approveDraft);

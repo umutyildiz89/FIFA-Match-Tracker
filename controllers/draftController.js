@@ -1,5 +1,6 @@
 const pool = require('../config/database');
 const { canMergeDrafts, mergeDrafts } = require('../utils/draftMerge');
+const { processMatchImage } = require('../services/ocr');
 
 // OCR sonucu geldiğinde draft oluştur
 const createDraftFromOCR = async (req, res) => {
@@ -318,11 +319,116 @@ const rejectDraft = async (req, res) => {
   }
 };
 
+// OCR ile image işle ve draft oluştur
+const processImageWithOCR = async (req, res) => {
+  try {
+    const { imageUrl } = req.body;
+    const uploaderId = req.user.id;
+
+    if (!imageUrl) {
+      return res.status(400).json({
+        success: false,
+        message: 'Image URL gereklidir'
+      });
+    }
+
+    console.log(`OCR işlemi başlatılıyor: ${imageUrl}`);
+
+    // OCR işlemini çalıştır
+    const ocrResult = await processMatchImage(imageUrl, {
+      preprocessOptions: {
+        targetWidth: 2000,
+        targetHeight: 2000,
+        contrast: 1.2,
+        brightness: 1.0
+      }
+    });
+
+    if (!ocrResult.success || !ocrResult.matchData) {
+      console.error('OCR işlemi başarısız:', ocrResult.errors);
+      return res.status(500).json({
+        success: false,
+        message: 'OCR işlemi başarısız',
+        errors: ocrResult.errors
+      });
+    }
+
+    const matchData = ocrResult.matchData;
+    const timestamp = new Date();
+
+    // Draft'ı oluştur (PostgreSQL: RETURNING clause ile id al)
+    const [result] = await pool.execute(
+      `INSERT INTO drafts (mode, team1_name, team2_name, score1, score2, players, image_url, uploader_id, timestamp, status)
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, 'pending') RETURNING id`,
+      [
+        matchData.mode || 'clubs',
+        matchData.team1_name || 'Team 1',
+        matchData.team2_name || 'Team 2',
+        matchData.score1 ?? 0,
+        matchData.score2 ?? 0,
+        JSON.stringify(matchData.players || []),
+        imageUrl,
+        uploaderId,
+        timestamp
+      ]
+    );
+
+    const draftId = result.insertId || result[0]?.id;
+
+    // Oluşturulan draft'ı getir
+    const [drafts] = await pool.execute(
+      'SELECT * FROM drafts WHERE id = ?',
+      [draftId]
+    );
+
+    if (drafts.length === 0) {
+      return res.status(500).json({
+        success: false,
+        message: 'Draft oluşturulurken hata oluştu'
+      });
+    }
+
+    const newDraft = drafts[0];
+    // PostgreSQL JSONB zaten object olabilir
+    if (typeof newDraft.players === 'string') {
+      newDraft.players = JSON.parse(newDraft.players);
+    }
+
+    // Merge kontrolü yap
+    await checkAndMergeDrafts(newDraft);
+
+    // Güncellenmiş draft'ı tekrar getir
+    const [updatedDrafts] = await pool.execute(
+      'SELECT * FROM drafts WHERE id = ?',
+      [draftId]
+    );
+
+    const finalDraft = updatedDrafts[0];
+    // PostgreSQL JSONB zaten object olabilir, parse etmeye çalış
+    if (typeof finalDraft.players === 'string') {
+      finalDraft.players = JSON.parse(finalDraft.players);
+    }
+
+    res.status(201).json({
+      success: true,
+      message: 'OCR işlemi tamamlandı ve draft oluşturuldu',
+      data: finalDraft
+    });
+  } catch (error) {
+    console.error('Process image with OCR error:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Sunucu hatası: ' + error.message
+    });
+  }
+};
+
 module.exports = {
   createDraftFromOCR,
   getAllDrafts,
   getDraftById,
   approveDraft,
-  rejectDraft
+  rejectDraft,
+  processImageWithOCR
 };
 

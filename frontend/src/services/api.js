@@ -104,6 +104,10 @@ export const draftsService = {
     return api.post('/api/drafts/ocr', data).then(res => res.data.data)
   },
 
+  processImage: (imageUrl) => {
+    return api.post('/api/drafts/process-image', { imageUrl }).then(res => res.data.data)
+  },
+
   approve: (id) => {
     return api.post(`/api/drafts/${id}/approve`).then(res => res.data.data)
   },
